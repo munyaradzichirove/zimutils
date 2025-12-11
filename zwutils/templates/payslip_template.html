@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Salary Slip</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<style>
+:root {
+    --font-size: 10px;       
+    --font-family: 'Roboto', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+}
+
+.payslip {
+    width: 210mm;  
+    min-height: 297mm; 
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.logo img {
+    height: 160px;
+    width: auto;
+}
+
+.info-table, .earnings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+}
+
+.info-table td {
+    padding: 4px 6px;
+    text-align: left;
+}
+
+.earnings-table th, .earnings-table td {
+    border: 1px solid #ccc;
+    padding: 5px 6px;
+    text-align: center;
+    font-weight: 300;
+}
+
+.earnings-table th {
+    background-color: #000;
+    color: #fff;
+    font-weight: 400;
+}
+
+.total-row td {
+    font-weight: 500;
+}
+
+.signature {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    font-weight: 300;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 7px;
+    color: #555;
+}
+</style>
+</head>
+<body>
+
+<div class="payslip">
+
+    <!-- Header -->
+   <div class="header-container" style="align-items: center;">
+    <div class="company-info" style="flex: 1;">
+        <h3 style="font-weight:bold;">{{ company or "" }}</h3>
+        <p>{{ company_address or "" }}</p>
+        <p>{{ company_phone or "" }} {{ company_email or "" }}</p>
+    </div>
+
+    <div class="logo" style="flex: 0 0 auto; text-align: center;">
+          <h4 style="font-weight:bold;">Salary Slip</h4>
+        <img src="data:image/webp;base64,{{ logo_base64 or '' }}" alt="Logo">
+    </div>
+<!-- 
+    <div class="invoice-info text-end" style="flex: 1;">
+        <h2 style="font-weight:bold;">Salary Slip</h2>
+    </div> -->
+    </div>
+
+
+    <!-- Employee Info -->
+    <table class="info-table table table-sm">
+        <tr>
+            <td><strong>Employee Id:</strong> {{ employee_id or "" }}</td>
+            <td><strong>Name:</strong> {{ first_name or "" }} {{ last_name or "" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Department:</strong> {{ department or "" }}</td>
+            <td><strong>Designation:</strong> {{ designation or "" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Date of Joining:</strong> {{ date_of_joining or "" }}</td>
+            <td><strong>Total Leave Days:</strong> {{ total_leave_days or "" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Payroll Period:</strong> {{ period or "" }}</td>
+            <td><strong>Leave Days Taken:</strong> {{ leave_days_taken or "" }}</td>
+        </tr>
+    </table>
+
+    <!-- Earnings & Deductions -->
+    <table class="earnings-table table table-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Earnings</th>
+                <th>Amount</th>
+                <th>Deductions</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set max_len = [earnings|length, deductions|length]|max %}
+            {% for i in range(max_len) %}
+            <tr>
+                <td>{{ earnings[i].name if i < earnings|length else "" }}</td>
+                <td>{{ "%.2f"|format(earnings[i].amount) if i < earnings|length else "" }}</td>
+
+                <td>{{ deductions[i].name if i < deductions|length else "" }}</td>
+                <td>{{ "%.2f"|format(deductions[i].amount) if i < deductions|length else "" }}</td>
+            </tr>
+            {% endfor %}
+
+            <tr class="total-row fw-bold">
+                <td>Total Earnings</td>
+                <td>{{ "%.2f"|format(total_earnings or 0) }}</td>
+
+                <td>Total Deductions</td>
+                <td>{{ "%.2f"|format(total_deductions or 0) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Net Pay -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+        <div class="sub-header">
+            Net Pay: <strong>{{ "%.2f"|format(net_salary or 0) }}</strong>
+        </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signature">
+        <span>HR's Signature ________________</span>
+        <span>Employee's Signature ________________</span>
+    </div>
+
+    <footer>Powered by @ {{ powered_by or "" }}</footer>
+</div>
+
+</body>
+</html>
