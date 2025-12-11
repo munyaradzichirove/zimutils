@@ -143,3 +143,54 @@ class Payroll:
         order = ["NSSA", "PAYE", "AIDS LEVY"]
         # Create a new sorted list based on the order of special deductions
         self.deductions.sort(key=lambda x: order.index(x['name'].upper()) if x['name'].upper() in order else len(order))
+
+    
+
+    def payee_against_slab_usd(self,amount):
+        """
+        Calculate PAYE based on given slabs.
+        :param amount: Taxable income (float)
+        :return: PAYE amount (float)
+        """
+        from frappe.utils import flt
+        payee = 0.0
+        slabs = [
+            (0.00, 100.00, 0.0, 0.00),
+            (100.01, 300.00, 0.20, 20.00),
+            (300.01, 1000.00, 0.25, 35.00),
+            (1000.01, 2000.00, 0.30, 85.00),
+            (2000.01, 3000.00, 0.35, 185.00),
+            (3000.01, 1000000.00, 0.40, 335.00),
+        ]
+        for lower, upper, percent, fixed in slabs:
+            if lower <= amount <= upper:
+                payee = ( amount * percent) - fixed
+                print(f"{amount}----------percent {percent} --fixed {fixed}-----------payee {payee}")
+                break
+
+        return flt(payee)
+
+
+    def payee_against_slab_zwg(self,amount):
+        """
+        Calculate PAYE based on given slabs.
+        :param amount: Taxable income (float)
+        :return: PAYE amount (float)
+        """
+        from frappe.utils import flt
+        payee = 0.0
+        slabs = [
+            (0.00, 2800.00, 0.0, 0.00),
+            (2800.01, 8400.00, 0.20, 560.00),
+            (8400.01, 28000.00, 0.25, 980.00),
+            (28000.01, 56000.00, 0.30, 2380.00),
+            (56000.01, 84000.00, 0.35, 5180.00),
+            (84000.01, 1000000.00, 0.40, 9380.00),
+        ]
+        for lower, upper, percent, fixed in slabs:
+            if lower <= amount <= upper:
+                payee = ( amount * percent) - fixed
+                print(f"{amount} ----------percent {percent} --fixed {fixed}-----------payee {payee}")
+                break
+
+        return flt(payee)
