@@ -150,6 +150,12 @@ footer {
                 <td>{{ "%.2f"|format(deductions[i].amount) if i < deductions|length else "" }}</td>
             </tr>
             {% endfor %}
+<tr class="empty-row">
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+</tr>
 
             <tr class="total-row fw-bold">
                 <td>Total Earnings</td>
@@ -165,6 +171,9 @@ footer {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
         <div class="sub-header">
             Net Pay: <strong>{{ "%.2f"|format(net_salary or 0) }}</strong>
+        </div>
+         <div class="sub-header">
+            Tax Credits: <strong>{{ "%.2f"|format(tax_credits or 0) }}</strong>
         </div>
     </div>
 

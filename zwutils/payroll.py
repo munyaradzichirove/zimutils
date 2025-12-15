@@ -16,7 +16,8 @@ class Payroll:
         designation=None,
         date_of_joining=None,
         total_leave_days=None,
-        leave_days_taken=None
+        leave_days_taken=None,
+        logo_path=None
         
     ):
         self.first_name = first_name
@@ -34,10 +35,13 @@ class Payroll:
         self.date_of_joining = date_of_joining
         self.total_leave_days=total_leave_days
         self.leave_days_taken=leave_days_taken
+        self.logo_path = logo_path
 
         # Components
         self.earnings = []    
         self.deductions = []    
+        self.tax_credits = []    
+
 
         self.track_nssa_balance=0
         self.total_ensurable=0
@@ -61,6 +65,15 @@ class Payroll:
         if name.upper() == "BASIC SALARY":
             self.basic_salary += amount
         self.earnings.append({"name": name, "amount": amount})
+    
+    def add_credits(self, name, amount):
+        """Add an earning component, raise error if invalid"""
+        if not name:
+            raise ValueError("Earning name cannot be empty or None")
+        if amount is None or amount == 0:
+            raise ValueError("Earning amount cannot be None or 0")
+        self.tax_credits.append({"name": name, "amount": amount})
+
 
     def add_deduction(self, name, amount=None, is_allowable_deduction=False, percentage=0):
         name_upper = name.upper()
@@ -95,6 +108,10 @@ class Payroll:
               
     def total_earnings(self):
         return sum(e["amount"] for e in self.earnings)
+                
+    def total_tax_credits(self):
+        return sum(t["amount"] for t in self.tax_credits)
+
 
     def total_deductions(self):
         return sum(d["amount"] for d in self.deductions)
@@ -124,7 +141,7 @@ class Payroll:
         paye = next((d for d in self.deductions if d['name'].upper() == "PAYE"), None)
         if paye:
             self.total_taxable_income = self.total_ensurable - self.allowable_deduction
-            paye['amount'] = self.payee_against_slab_usd(self.total_taxable_income)
+            paye['amount'] = max(self.payee_against_slab_usd(self.total_taxable_income)-self.total_tax_credits(),0)
         aids_levy = next((d for d in self.deductions if d['name'].upper() == "AIDS LEVY"), None)
         if aids_levy:
             paye_amount = next((d['amount'] for d in self.deductions if d['name'].upper() == "PAYE"), None)
