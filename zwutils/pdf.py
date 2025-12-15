@@ -9,7 +9,12 @@ def load_base64_image(path):
 
 def generate_payslip_pdf(payroll, output_path, template_dir):
     # Load logo as base64
-    logo_base64 = load_base64_image(payroll.logo_path)
+    try: 
+
+         logo_base64 = load_base64_image(payroll.logo_path)
+    except:
+        logo_base64=''
+
 
     # Load HTML template
     env = Environment(loader=FileSystemLoader(template_dir))

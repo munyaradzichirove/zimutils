@@ -17,7 +17,7 @@ class Payroll:
         date_of_joining=None,
         total_leave_days=None,
         leave_days_taken=None,
-        logo_path=None
+        logo_path=None,
         
     ):
         self.first_name = first_name
@@ -108,7 +108,8 @@ class Payroll:
               
     def total_earnings(self):
         return sum(e["amount"] for e in self.earnings)
-                
+    def author(self):
+        return "name: Munyaradzi Chirove | email :chirovemunyaradzi@gmail.com | Happy Coding!!!!"          
     def total_tax_credits(self):
         return sum(t["amount"] for t in self.tax_credits)
 
