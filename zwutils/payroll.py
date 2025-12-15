@@ -1,17 +1,16 @@
 # zwutils/payroll.py
-
 class Payroll:
     def __init__(
         self,
-        first_name,
-        last_name,
+        employee_id,
+        first_name=None,
+        last_name=None,
         company=None,
         department=None,
         company_address=None,
         company_phone=None,
         company_email=None,
         period=None,
-        employee_id=None,
         currency="USD",
         template=None,
         designation=None,
@@ -43,9 +42,11 @@ class Payroll:
         self.track_nssa_balance=0
         self.total_ensurable=0
         self.allowable_deduction=0
+        self.total_taxable_income=0
+        self.basic_salary=0
 
-        self.nssa_percentage=0.045
-        self.aids_levy_percentage=0.015
+        self.nssa_percentage=0.0
+        self.aids_levy_percentage=0.0
 
     def add_earning(self, name, amount,track_nssa=False,is_taxable=False):
         """Add an earning component, raise error if invalid"""
@@ -57,6 +58,8 @@ class Payroll:
             self.track_nssa_balance += amount
         if is_taxable:
             self.total_ensurable +=amount
+        if name.upper() == "BASIC SALARY":
+            self.basic_salary += amount
         self.earnings.append({"name": name, "amount": amount})
 
     def add_deduction(self, name, amount=None, is_allowable_deduction=False, percentage=0):
@@ -64,33 +67,32 @@ class Payroll:
 
         # --- VALIDATION ---
         if name_upper == "AIDS LEVY":
-            # Check PAYE exists BEFORE adding AIDS LEVY
             paye_exists = any(d['name'].upper() == "PAYE" for d in self.deductions)
             if not paye_exists:
                 raise ValueError("Cannot add AIDS Levy before PAYE has been added.")
 
         # --- SPECIAL DEDUCTIONS ---
         if name_upper in ["NSSA", "PAYE", "AIDS LEVY"]:
-            # Add placeholder only if not already added
             if not any(d['name'].upper() == name_upper for d in self.deductions):
                 self.deductions.append({"name": name_upper, "amount": 0})
                 if name_upper == "AIDS LEVY":
-                    # Set the AIDS Levy percentage, default to 0.3 if not specified
-                    self.aids_levy_percentage = percentage if percentage > 0 else 0.3
-            deduction_amount = 0
-
+                    self.aids_levy_percentage = percentage if percentage > 0 else 3
+                elif name_upper == "NSSA":
+                    self.nssa_percentage = percentage if percentage > 0 else 4.5
+        
+        # --- ALLOWABLE DEDUCTIONS ---
+        if is_allowable_deduction and name_upper not in ["NSSA", "PAYE", "AIDS LEVY"]:
+            deduction_amount = percent * self.basic_salary / 100
+            self.allowable_deduction += deduction_amount
+            self.deductions.append({"name": name, "amount": deduction_amount})
         # --- NORMAL DEDUCTIONS ---
         else:
-            if amount is None:
+            if amount is None and name_upper not in ["NSSA", "PAYE", "AIDS LEVY"]:
                 raise ValueError(f"Amount must be provided for {name}")
-            self.deductions.append({"name": name, "amount": amount})
-            deduction_amount = amount
-
-        # --- ALLOWABLE DEDUCTIONS ---
-        if is_allowable_deduction:
-            self.allowable_deduction += deduction_amount
-
-
+            else:
+                if name_upper not in ["NSSA", "PAYE", "AIDS LEVY"]:
+                    self.deductions.append({"name": name, "amount": amount})
+              
     def total_earnings(self):
         return sum(e["amount"] for e in self.earnings)
 
@@ -114,45 +116,29 @@ class Payroll:
         """Calculate NSSA, PAYE, and AIDS Levy in their reserved positions, and add 100 to amounts if they exist."""
         paye_amount=0
 
-        # Check if NSSA exists and add 100 to its amount if it does
         nssa = next((d for d in self.deductions if d['name'].upper() == "NSSA"), None)
         if nssa:
-            nssa['amount'] = 100  # Add 100 to NSSA amount
-            # nssa['amount'] = self.track_nssa_balance * self.nssa_percentage  # Recalculate based on track_nssa_balance
-
-        # Check if PAYE exists and add 100 to its amount if it does
+            nssa_amount =self.nssa_percentage *  self.track_nssa_balance /100
+            nssa['amount'] = nssa_amount
+            self.allowable_deduction +=nssa_amount
         paye = next((d for d in self.deductions if d['name'].upper() == "PAYE"), None)
         if paye:
-            paye['amount'] = 100  # Add 100 to PAYE amount
-            # taxable_income = self.total_taxable_income - self.allowable_deduction  # Calculate taxable income
-            # paye['amount'] = taxable_income * 0.25  # Recalculate PAYE amount
-            paye_amount=100
-
-        # Check if AIDS LEVY exists and add 100 to its amount if it does
+            self.total_taxable_income = self.total_ensurable - self.allowable_deduction
+            paye['amount'] = self.payee_against_slab_usd(self.total_taxable_income)
         aids_levy = next((d for d in self.deductions if d['name'].upper() == "AIDS LEVY"), None)
         if aids_levy:
-            aids_levy['amount'] = 100  # Add 100 to AIDS LEVY amount
-            # paye_amount = next((d['amount'] for d in self.deductions if d['name'].upper() == "PAYE"), None)
+            paye_amount = next((d['amount'] for d in self.deductions if d['name'].upper() == "PAYE"), None)
             if paye_amount:
-                aids_levy['amount'] = paye_amount * self.aids_levy_percentage  # Recalculate AIDS Levy based on PAYE
+                aids_levy['amount'] = paye_amount * self.aids_levy_percentage /100
 
 
     def rearrange_deductions(self):
         """Rearrange deductions list so that NSSA is first, followed by PAYE and AIDS Levy."""
-        # Sort the deductions list to ensure NSSA, PAYE, and AIDS LEVY are in the correct order
         order = ["NSSA", "PAYE", "AIDS LEVY"]
-        # Create a new sorted list based on the order of special deductions
         self.deductions.sort(key=lambda x: order.index(x['name'].upper()) if x['name'].upper() in order else len(order))
 
-    
 
     def payee_against_slab_usd(self,amount):
-        """
-        Calculate PAYE based on given slabs.
-        :param amount: Taxable income (float)
-        :return: PAYE amount (float)
-        """
-        from frappe.utils import flt
         payee = 0.0
         slabs = [
             (0.00, 100.00, 0.0, 0.00),
@@ -165,19 +151,11 @@ class Payroll:
         for lower, upper, percent, fixed in slabs:
             if lower <= amount <= upper:
                 payee = ( amount * percent) - fixed
-                print(f"{amount}----------percent {percent} --fixed {fixed}-----------payee {payee}")
                 break
-
-        return flt(payee)
+        return float(payee)
 
 
     def payee_against_slab_zwg(self,amount):
-        """
-        Calculate PAYE based on given slabs.
-        :param amount: Taxable income (float)
-        :return: PAYE amount (float)
-        """
-        from frappe.utils import flt
         payee = 0.0
         slabs = [
             (0.00, 2800.00, 0.0, 0.00),
@@ -193,4 +171,4 @@ class Payroll:
                 print(f"{amount} ----------percent {percent} --fixed {fixed}-----------payee {payee}")
                 break
 
-        return flt(payee)
+        return float(payee)
