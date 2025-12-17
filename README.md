@@ -84,4 +84,3 @@ MIT License
 
 You can adjust `path_to_your_logo.webp` to reflect how you want users to provide their logo dynamically.  
 
-If you want, I can also **draft a `requirements.txt`** for you that matches your library right now. Do
