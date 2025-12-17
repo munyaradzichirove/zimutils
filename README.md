@@ -1,6 +1,6 @@
 # Zwutils Payroll Library
 
-A lightweight Python library to generate payrolls and salary slips, calculate deductions (NSSA, PAYE, AIDS Levy), earnings, and tax credits. Includes PDF generation using customizable HTML templates.
+A lightweight Python library to generate payrolls and salary slips, calculate deductions (NSSA, PAYE, AIDS Levy), earnings, and tax credits. Includes PDF generation using customizable HTML templates. Example : https://github.com/munyaradzichirove/zimutils/blob/main/images/salary%20_slip.png
 
 ## Features
 
