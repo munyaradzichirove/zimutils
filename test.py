@@ -30,15 +30,18 @@ salary_slip.add_credits(name="Blind",amount= 50)
 salary_slip.add_deduction(name="Fuel", amount=120)
 salary_slip.add_deduction(name="NSSA")
 salary_slip.add_deduction(name="PAYE")
-salary_slip.add_deduction(name="ZIBAWU", amount=80)
-salary_slip.add_deduction(name="UFAWUZ", amount=343)
+salary_slip.add_deduction(name="ZIBAWU",is_allowable_deduction=True, percentage=2)
+salary_slip.add_deduction(name="UFAWUZ", is_allowable_deduction=True, percentage=3)
+salary_slip.add_deduction(name="LAPF", is_allowable_deduction=True, percentage=6)
+salary_slip.add_deduction(name="ZESCWU", is_allowable_deduction=True, percentage=1.5)
+salary_slip.add_deduction(name="NECWEI", is_allowable_deduction=True, percentage=1)
+salary_slip.add_deduction(name="NEC", is_allowable_deduction=True, percentage=2.4)
 salary_slip.add_deduction(name="AIDS Levy")
 salary_slip.add_deduction(name="Loan Repayment", amount=343)
 salary_slip.finalize_deductions()
 salary_slip.rearrange_deductions()
 
 # print(salary_slip.author())
-
 
 generate_payslip_pdf(
     payroll=salary_slip,

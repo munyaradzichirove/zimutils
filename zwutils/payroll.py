@@ -95,7 +95,13 @@ class Payroll:
         
         # --- ALLOWABLE DEDUCTIONS ---
         if is_allowable_deduction and name_upper not in ["NSSA", "PAYE", "AIDS LEVY"]:
-            deduction_amount = percent * self.basic_salary / 100
+            against = ""
+            if name_upper == "NEC":
+                against = self.total_ensurable
+            else:
+                against = self.basic_salary
+                
+            deduction_amount = percentage * against / 100
             self.allowable_deduction += deduction_amount
             self.deductions.append({"name": name, "amount": deduction_amount})
         # --- NORMAL DEDUCTIONS ---
