@@ -63,10 +63,7 @@ salary_slip.add_deduction(name="Loan Repayment", amount=343)
 salary_slip.finalize_deductions()
 salary_slip.rearrange_deductions()
 
-
 # print(salary_slip.author())
-
-
 generate_payslip_pdf(
     payroll=salary_slip,
     output_path="payslip.pdf",
